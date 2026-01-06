@@ -1,1372 +1,293 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Fluid Chat</title>
-  <link rel="manifest" href="manifest.json">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <style>
-    /* CSS Variables for theme */
-    :root {
-      --primary: #1e88e5;
-      --primary-dark: #1565c0;
-      --bg-gradient-start: #141e30;
-      --bg-gradient-end: #243b55;
-      --panel-bg: #1f2733;
-      --panel-bg-light: #2b3442;
-      --input-bg: #1a1a1a;
-      --text-light: #e0e0e0;
-      --text-muted: #aaa;
-      --accent: #e53935;
-      --emoji-picker-bg: #141414;
-      --status-online: #43b581; /* green */
-      --status-idle: #faa61a;   /* orange */
-      --status-dnd: #f04747;    /* red */
-      --status-offline: #747f8d;/* gray */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERKELEVITTU.SITE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --suomi-blue: #002f6c;
+            --accent-cyan: #00d4ff;
+            --accent-pink: #ff007a;
+        }
 
-    /* Global resets and typography */
-    * {
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Roboto', sans-serif;
-      background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-      color: var(--text-light);
-      /* The UI is pinned at top-left now (no centering). */
-      overflow: hidden;
-    }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: #0a0a0c;
+            /* Modern dense flag background with parallax-style fade */
+            background-image: 
+                radial-gradient(circle at center, transparent 0%, #0a0a0c 90%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="24" viewBox="0 0 18 11" opacity="0.15"><rect width="18" height="11" fill="white"/><rect width="18" height="3" y="4" fill="%23002f6c"/><rect width="3" height="11" x="5" fill="%23002f6c"/></svg>');
+            background-attachment: fixed;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
 
-    /* Fade-in animation */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to   { opacity: 1; transform: scale(1); }
-    }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
 
-    /* Containers */
-    #login-container, #profile-setup-container, #chat-container {
-      width: 100%; 
-      height: 100%;
-      display: flex; 
-      align-items: center; 
-      justify-content: center;
-      animation: fadeIn 0.5s ease forwards;
-    }
-    #login-container, #profile-setup-container {
-      flex-direction: column; 
-      text-align: center;
-    }
-    #chat-container {
-      display: none;
-    }
+        .hero-title {
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff 30%, var(--suomi-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 30px rgba(0, 47, 108, 0.4));
+        }
 
-    /* Buttons & inputs */
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background: var(--primary);
-      color: #fff;
-      margin-top: 10px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    button:hover { background: var(--primary-dark); }
-    input {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px 0;
-      border: 1px solid #444;
-      border-radius: 6px;
-      background: var(--input-bg);
-      color: var(--text-light);
-      outline: none;
-    }
-    input:focus {
-      border-color: var(--primary);
-    }
+        .flag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(25px, 1fr));
+            gap: 4px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--accent-cyan);
+        }
 
-    /* Profile Setup */
-    #pfp-options { margin: 15px 0; }
-    #pfp-options p { margin-bottom: 10px; }
-    .pfp-option {
-      width: 70px; 
-      height: 70px; 
-      border-radius: 50%;
-      margin: 0 10px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      object-fit: cover;
-    }
-    .pfp-option.selected {
-      border-color: var(--primary);
-    }
+        .flag-item {
+            transition: transform 0.3s ease;
+        }
 
-    /* Chat Layout (top-left pinned) */
-    .chat-layout {
-      display: flex;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.25);
-      backdrop-filter: blur(6px);
-      overflow: hidden;
-    }
+        .flag-item:hover {
+            transform: scale(2) rotate(15deg);
+            z-index: 50;
+        }
 
-    /* Sidebar */
-    .sidebar {
-      width: 280px;
-      background: var(--panel-bg);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-    .sidebar h2 {
-      margin: 0 0 20px;
-      font-size: 1.5rem;
-      color: var(--primary);
-    }
-    .sidebar-buttons {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      display: flex;
-      gap: 10px;
-    }
-    .sidebar-buttons button {
-      background: transparent;
-      font-size: 1.3rem;
-      color: var(--primary);
-    }
-    .sidebar-buttons button:hover { color: #fff; }
-    #contact-search {
-      width: 100%;
-      margin-top: 50px;
-      padding: 8px;
-    }
-    #autocomplete-results {
-      position: absolute;
-      top: 120px;
-      left: 20px;
-      right: 20px;
-      background: var(--panel-bg);
-      border: 1px solid #333;
-      border-radius: 6px;
-      max-height: 200px;
-      overflow-y: auto;
-      display: none;
-      z-index: 2;
-    }
-    .autocomplete-item {
-      padding: 10px;
-      cursor: pointer;
-    }
-    .autocomplete-item:hover {
-      background: var(--panel-bg-light);
-    }
-    #start-chat {
-      margin-top: 20px;
-    }
-    #conversation-list {
-      margin-top: 20px;
-      flex: 1;
-      overflow-y: auto;
-      border-top: 1px solid #333;
-      padding-top: 10px;
-    }
-    .dm-item {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #333;
-      cursor: pointer;
-    }
-    .dm-item:hover {
-      background: var(--panel-bg-light);
-    }
-    .dm-avatar {
-      width: 35px; 
-      height: 35px; 
-      border-radius: 50%; 
-      margin-right: 10px;
-    }
+        .marquee-box {
+            background: var(--accent-pink);
+            color: white;
+            padding: 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(255, 0, 122, 0.3);
+        }
 
-    /* Status Dot */
-    .status-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 6px;
-    }
+        .marquee-text {
+            display: inline-block;
+            white-space: nowrap;
+            animation: scroll 15s linear infinite;
+        }
 
-    /* Chat Window */
-    .chat-window {
-      flex: 1;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-    .chat-window h2 {
-      margin: 0 0 15px;
-      color: var(--primary);
-      text-align: center;
-    }
-    .messages {
-      flex: 1;
-      background: var(--input-bg);
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 15px;
-      overflow-y: auto;
-    }
+        @keyframes scroll {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100%); }
+        }
 
-    /* Input Area with Emoji Button */
-    .input-area {
-      display: flex;
-      margin-top: 15px;
-      align-items: center;
-      position: relative;
-    }
-    .input-area input {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #444;
-      border-radius: 6px 0 0 6px;
-      background: #141414;
-      color: var(--text-light);
-    }
-    .input-area button {
-      padding: 12px;
-      border-radius: 0 6px 6px 0;
-    }
-    .emoji-btn {
-      background: transparent;
-      border: none;
-      font-size: 1.5rem;
-      margin-right: 8px;
-      cursor: pointer;
-      color: var(--primary);
-    }
-    .emoji-btn:hover {
-      color: var(--primary-dark);
-    }
+        .meter-track {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
 
-    /* Emoji Picker Popup */
-    .emoji-picker {
-      position: absolute;
-      bottom: 60px;
-      left: 10px;
-      background: var(--emoji-picker-bg);
-      border: 1px solid #444;
-      border-radius: 6px;
-      padding: 8px;
-      display: none;
-      flex-wrap: wrap;
-      gap: 6px;
-      z-index: 5;
-    }
-    .emoji-picker span {
-      cursor: pointer;
-      font-size: 1.2rem;
-    }
-    .emoji-picker span:hover {
-      transform: scale(1.2);
-    }
+        #meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--suomi-blue), var(--accent-cyan));
+            box-shadow: 0 0 20px var(--accent-cyan);
+            transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
 
-    /* Grouped Messages */
-    .message-group {
-      margin-bottom: 20px;
-    }
-    .message-header-group {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-      border-bottom: 1px solid #333;
-      padding-bottom: 6px;
-    }
-    .message-header-info {
-      margin-left: 10px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .message-username {
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-    .message-timestamp {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-    .message-avatar {
-      width: 40px; 
-      height: 40px; 
-      border-radius: 50%; 
-      cursor: pointer;
-    }
-    .message-body {
-      margin-left: 50px;
-      font-size: 1rem;
-      line-height: 1.4;
-      padding: 4px 0;
-    }
+        .visitor-lcd {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: var(--accent-cyan);
+            padding: 12px 24px;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent-cyan);
+            letter-spacing: 4px;
+            box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.2);
+        }
 
-    /* Overlays (Settings & Friend Requests) */
-    #settings-overlay, #friend-requests-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
-    }
-    #settings-inner, #friend-requests-inner {
-      background: var(--panel-bg);
-      padding: 25px;
-      border-radius: 10px;
-      width: 320px;
-      position: relative;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    #settings-inner h2, #friend-requests-inner h2 {
-      margin: 0 0 20px;
-      color: var(--primary);
-      text-align: center;
-    }
-    #close-settings, #close-friend-requests {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: transparent;
-      color: #fff;
-      border: none;
-      font-size: 1.4rem;
-      cursor: pointer;
-    }
-    #settings-displayName, #settings-pfpURL, #settings-statusMessage {
-      width: 100%;
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background: #141414;
-      color: var(--text-light);
-    }
-    #save-settings, #logout-btn {
-      float: right;
-      margin-top: 10px;
-      padding: 10px 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background: var(--accent);
-      color: #fff;
-    }
-    #save-settings:hover, #logout-btn:hover {
-      background: #d32f2f;
-    }
+        .action-btn {
+            background: #fff;
+            color: #000;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-    /* Status dropdown in settings */
-    #settings-statusSelect {
-      width: 100%;
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background: #141414;
-      color: var(--text-light);
-    }
+        .action-btn:hover {
+            background: var(--accent-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
+        }
 
-    /* Friend Requests Tabs */
-    .friend-tabs {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 15px;
-    }
-    .friend-tabs button {
-      flex: 1;
-      padding: 10px;
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .friend-tabs button.active {
-      background: var(--primary-dark);
-    }
+        .saatanan-overlay {
+            animation: glitchPop 0.15s infinite;
+        }
 
-    /* Friend Items */
-    .friend-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #333;
-      padding: 8px 0;
-    }
-    .friend-item img {
-      width: 35px; 
-      height: 35px; 
-      border-radius: 50%;
-    }
-    .friend-item button {
-      padding: 6px 10px;
-      background: var(--accent);
-      border: none;
-      border-radius: 4px;
-      color: #fff;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-    .friend-item button:hover {
-      background: #d32f2f;
-    }
-
-    /* Profile Popup */
-    #profile-popup {
-      display: none;
-      position: absolute;
-      background: var(--panel-bg);
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 15px;
-      z-index: 10;
-      width: 240px;
-    }
-    #profile-popup img {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: block;
-      margin: 0 auto 10px;
-    }
-    #profile-popup h3 {
-      text-align: center;
-      margin: 0 0 5px;
-      font-size: 1.1rem;
-    }
-    #profile-popup p {
-      text-align: center;
-      margin: 0;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-  </style>
+        @keyframes glitchPop {
+            0% { transform: scale(1.5) translate(0,0); filter: hue-rotate(0deg); }
+            50% { transform: scale(1.6) translate(-5px, 5px); filter: hue-rotate(90deg); }
+            100% { transform: scale(1.5) translate(5px, -5px); filter: hue-rotate(180deg); }
+        }
+    </style>
 </head>
-<body>
-  <!-- Login Screen -->
-  <div id="login-container">
-    <h1>Fluid Chat</h1>
-    <button id="google-signin">Sign in with Google</button>
-    <button id="github-signin">Sign in with GitHub</button>
-  </div>
+<body class="p-4 md:p-10 flex flex-col items-center">
 
-  <!-- Profile Setup Screen -->
-  <div id="profile-setup-container" style="display:none;">
-    <h1>Set Up Your Profile</h1>
-    <input type="text" id="fullName" placeholder="Full Name" />
-    <input type="text" id="displayName" placeholder="Display Name (without @)" />
-    <div id="pfp-options">
-      <p>Choose a Profile Picture:</p>
-      <img class="pfp-option" src="https://i.pinimg.com/474x/f1/da/a7/f1daa70c9e3343cebd66ac2342d5be3f.jpg" />
-      <img class="pfp-option" src="https://i.pinimg.com/1200x/46/72/f8/4672f876389036583190d93a71aa6cb2.jpg" />
-      <img class="pfp-option" src="https://i.pinimg.com/236x/da/96/78/da96780e1b54f46d6ddb13c3e14cec83.jpg" />
-      <img class="pfp-option" src="https://i.pinimg.com/736x/c6/6a/73/c66a732387c737fa97526841cbdc0938.jpg" />
-    </div>
-    <button id="profile-save">Save Profile</button>
-  </div>
+    <div class="w-full max-w-5xl glass-card rounded-xl overflow-hidden">
+        <!-- Header -->
+        <header class="pt-16 pb-12 px-6 text-center bg-gradient-to-b from-white/5 to-transparent">
+            <h1 class="text-6xl md:text-8xl hero-title uppercase mb-4">
+                Perkelevittu
+            </h1>
+            <div class="inline-block px-4 py-1 border border-white/20 rounded-full text-[10px] tracking-[0.4em] text-white/60 uppercase">
+                Turku Digital Core • Established 2026
+            </div>
+        </header>
 
-  <!-- Chat UI -->
-  <div id="chat-container">
-    <div class="chat-layout">
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <div class="sidebar-buttons">
-          <button id="open-settings" title="Settings">⚙</button>
-          <button id="open-friend-requests" title="Friend Requests">👥</button>
+        <!-- Marquee -->
+        <div class="marquee-box">
+            <div class="marquee-text">
+                !!! FINLAND IS THE BEST COUNTRY IN THE WORLD !!! SAATANAN !!! SAATANAN !!! 🇫🇮 🇫🇮 🇫🇮 
+            </div>
         </div>
-        <h2>Contacts</h2>
-        <input type="text" id="contact-search" placeholder="Search @DisplayName or email" autocomplete="off" />
-        <div id="autocomplete-results"></div>
-        <button id="start-chat">Start Chat</button>
-        <div id="conversation-list"></div>
-      </div>
-      <!-- Chat Window -->
-      <div class="chat-window">
-        <h2 id="chat-title">Chat</h2>
-        <div class="messages" id="messages"></div>
-        <div class="input-area">
-          <button class="emoji-btn" id="emoji-btn">😊</button>
-          <input type="text" id="message-input" placeholder="Type your message..." />
-          <button id="send-message">Send</button>
-          <!-- Emoji Picker -->
-          <div class="emoji-picker" id="emoji-picker">
-            <span>😀</span>
-            <span>😂</span>
-            <span>😍</span>
-            <span>😎</span>
-            <span>😢</span>
-            <span>👍</span>
-            <span>🙏</span>
-            <span>🔥</span>
-            <span>🎉</span>
-          </div>
+
+        <!-- The "Millions" of Flags -->
+        <div id="flag-container" class="flag-grid">
+            <!-- JS generates flags -->
         </div>
-      </div>
+
+        <!-- Main Content -->
+        <main class="p-8 md:p-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            
+            <div class="lg:col-span-7 space-y-10">
+                <section>
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-white/40 mb-6 font-bold">Protocol Statement</h2>
+                    <p class="text-2xl md:text-3xl font-light leading-snug">
+                        Welcome to the <span class="text-white font-bold underline decoration-blue-500">Exclusive</span> Finnish digital node. 
+                        okay thanks
+                    </p>
+                    <div class="mt-8">
+                        <span class="text-[10px] font-mono text-white/30 bg-white/5 border border-white/10 px-3 py-1 rounded italic transform rotate-1 inline-block">
+                            Voi paska, täällä on liikaa lippuja.
+                        </span>
+                    </div>
+                </section>
+
+                <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-8 bg-white/5 rounded border border-white/10">
+                        <h3 class="text-[10px] uppercase tracking-widest text-white/40 mb-6">Traffic Authority</h3>
+                        <div class="visitor-lcd text-2xl" id="visitor-count">00000000</div>
+                    </div>
+                    
+                    <div class="p-8 bg-white/5 rounded border border-white/10">
+                        <h3 class="text-[10px] uppercase tracking-widest text-white/40 mb-6">Identity FINNISH</h3>
+                        <div class="meter-track mb-6">
+                            <div id="meter-fill"></div>
+                        </div>
+                        <button onclick="increaseFinnishness()" class="action-btn w-full text-sm">
+                            be more FINNISH
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <div class="lg:col-span-5">
+                <div class="p-8 bg-blue-600/10 border border-blue-500/30 rounded-xl">
+                    <h2 class="text-xl font-bold mb-8 flex items-center">
+                        <span class="w-8 h-px bg-blue-500 mr-4"></span>
+                        Strategic Assets
+                    </h2>
+                    <ul class="space-y-6 text-sm font-bold uppercase tracking-widest">
+                        <li class="flex items-center group">
+                            <span class="text-blue-500 mr-4">01</span> 
+                            <span class="group-hover:text-blue-400 transition-colors">Sauna (Thermal Superiority)</span>
+                        </li>
+                        <li class="flex items-center group">
+                            <span class="text-blue-500 mr-4">02</span> 
+                            <span class="group-hover:text-blue-400 transition-colors">Salmiakki (Dark Matter)</span>
+                        </li>
+                        <li class="flex items-center group">
+                            <span class="text-blue-500 mr-4">03</span> 
+                            <span class="group-hover:text-blue-400 transition-colors">Metal (Acoustic Chaos)</span>
+                        </li>
+                        <li class="flex items-center group">
+                            <span class="text-blue-500 mr-4">04</span> 
+                            <span class="group-hover:text-blue-400 transition-colors">Sisu (Unbreakable Logic)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="p-10 border-t border-white/10 text-center bg-black/40">
+            <div class="text-[10px] uppercase tracking-[0.5em] text-white/30">
+                &copy; 2026-2026 Perkelevittu Productions. Node: Turku.
+            </div>
+        </footer>
     </div>
-  </div>
 
-  <!-- Profile Popup -->
-  <div id="profile-popup"></div>
+    <script>
+        // Flag Generation
+        const flagContainer = document.getElementById('flag-container');
+        const flagSvg = `
+            <svg viewBox="0 0 18 11" class="w-full h-auto drop-shadow-lg">
+                <rect width="18" height="11" fill="white"/>
+                <rect width="18" height="3" y="4" fill="#002f6c"/>
+                <rect width="3" height="11" x="5" fill="#002f6c"/>
+            </svg>
+        `;
 
-  <!-- Settings Overlay -->
-  <div id="settings-overlay">
-    <div id="settings-inner">
-      <button id="close-settings">×</button>
-      <h2>Settings</h2>
-
-      <!-- Display Name and PFP -->
-      <input type="text" id="settings-displayName" placeholder="New Display Name (without @)" />
-      <input type="text" id="settings-pfpURL" placeholder="New Profile Pic URL" />
-
-      <!-- Status Selection -->
-      <select id="settings-statusSelect">
-        <option value="online">Online</option>
-        <option value="idle">Idle</option>
-        <option value="dnd">Do Not Disturb</option>
-        <option value="offline">Offline</option>
-      </select>
-
-      <!-- Custom Status Message -->
-      <input type="text" id="settings-statusMessage" placeholder="Custom status message" />
-
-      <div class="toggle-container">
-        <label class="switch">
-          <input type="checkbox" id="toggle-non-friend-messages" checked>
-          <span class="slider"></span>
-        </label>
-        <span>Allow messages from non-friends</span>
-      </div>
-
-      <button id="save-settings">Save</button>
-      <button id="logout-btn">Log Out</button>
-    </div>
-  </div>
-
-  <!-- Friend Requests Overlay -->
-  <div id="friend-requests-overlay">
-    <div id="friend-requests-inner">
-      <button id="close-friend-requests">×</button>
-      <div class="friend-tabs">
-        <button id="tab-requests" class="active">Requests</button>
-        <button id="tab-friends">Friends</button>
-      </div>
-      <div id="friend-requests-content">
-        <h2>Friend Requests</h2>
-        <input type="text" id="friend-search" placeholder="Enter email to search" />
-        <button id="send-friend-request">Send Request</button>
-        <h3>Incoming Requests</h3>
-        <div id="incoming-friend-requests"></div>
-      </div>
-      <div id="friends-list-content" style="display: none;">
-        <h2>Your Friends</h2>
-        <div id="friends-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Firebase configuration – replace with your actual settings.
-    const firebaseConfig = {
-      apiKey: "AIzaSyCjLMJhZoIrhjMdNRExkvO-hvDssOWhFaw",
-      authDomain: "whatingsap.firebaseapp.com",
-      projectId: "whatingsap",
-      storageBucket: "whatingsap.firebasestorage.app",
-      messagingSenderId: "444146948060",
-      appId: "1:444146948060:web:5539ba05ea824110bbe119"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-    const DEFAULT_PFP = "https://i.pinimg.com/236x/da/96/78/da96780e1b54f46d6ddb13c3e14cec83.jpg";
-    let currentUser = null;
-    let currentConversationId = null;
-    let selectedPfpURL = null;
-
-    // System user constants
-    const SYSTEM_UID = "FluidChatSystemUID";
-    const SYSTEM_DISPLAYNAME = "FluidChat";
-    const SYSTEM_EMAIL = "3dexporevived@gmail.com"; 
-    const SYSTEM_PFP = DEFAULT_PFP;
-
-    // Helper to map status to color
-    function getStatusColor(status) {
-      switch(status) {
-        case 'online': return 'var(--status-online)';
-        case 'idle': return 'var(--status-idle)';
-        case 'dnd': return 'var(--status-dnd)';
-        default: return 'var(--status-offline)'; // offline or unknown
-      }
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('Service Worker registered with scope:', registration.scope);
-      }).catch(error => {
-      console.error('Service Worker registration failed:', error);
-    });
-  }
-
-
-
-    // Friend request functions
-    async function sendFriendRequest(recipientUid) {
-      const existing = await db.collection("friendRequests")
-        .where("from", "==", currentUser.uid)
-        .where("to", "==", recipientUid)
-        .where("status", "==", "pending")
-        .get();
-      if (!existing.empty) {
-        alert("Friend request already sent.");
-        return;
-      }
-      await db.collection("friendRequests").add({
-        from: currentUser.uid,
-        to: recipientUid,
-        status: "pending",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert("Friend request sent.");
-    }
-
-    async function acceptFriendRequest(requestId, senderUid) {
-      await db.collection("friendRequests").doc(requestId).update({ status: "accepted" });
-      await db.collection("users").doc(currentUser.uid).update({
-        friends: firebase.firestore.FieldValue.arrayUnion(senderUid)
-      });
-      await db.collection("users").doc(senderUid).update({
-        friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-      });
-      alert("Friend request accepted.");
-    }
-
-    async function declineFriendRequest(requestId) {
-      await db.collection("friendRequests").doc(requestId).update({ status: "declined" });
-      alert("Friend request declined.");
-    }
-
-    function loadIncomingFriendRequests() {
-      db.collection("friendRequests")
-        .where("to", "==", currentUser.uid)
-        .where("status", "==", "pending")
-        .onSnapshot(snapshot => {
-          const incomingDiv = document.getElementById("incoming-friend-requests");
-          incomingDiv.innerHTML = "";
-          snapshot.forEach(doc => {
-            const req = doc.data();
-            const reqDiv = document.createElement("div");
-            reqDiv.className = "friend-req-item";
-            db.collection("users").doc(req.from).get().then(senderSnap => {
-              if (senderSnap.exists) {
-                const sender = senderSnap.data();
-                reqDiv.innerHTML = sender.displayName + " (" + sender.email + ") ";
-                const acceptBtn = document.createElement("button");
-                acceptBtn.textContent = "Accept";
-                acceptBtn.onclick = () => { acceptFriendRequest(doc.id, req.from); };
-                reqDiv.appendChild(acceptBtn);
-                const declineBtn = document.createElement("button");
-                declineBtn.textContent = "Decline";
-                declineBtn.onclick = () => { declineFriendRequest(doc.id); };
-                reqDiv.appendChild(declineBtn);
-                incomingDiv.appendChild(reqDiv);
-              }
-            });
-          });
-        });
-    }
-
-    // Helper functions for profanity and name validation
-    async function isProfane(text) {
-      const url = `https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`;
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data.result !== text;
-      } catch (error) {
-        console.error("Error checking profanity:", error);
-        return false;
-      }
-    }
-    function isValidCharacters(name) {
-      return /^[A-Za-z0-9]+$/.test(name);
-    }
-
-    // Create FluidChat system conversation for new user.
-    async function createSystemConversationForNewUser() {
-      const participants = [currentUser.uid, SYSTEM_UID].sort();
-      const convoId = participants.join("_");
-      const convoRef = db.collection("conversations").doc(convoId);
-      const convoSnap = await convoRef.get();
-      if (!convoSnap.exists) {
-        await convoRef.set({
-          participants: participants,
-          participantEmails: [SYSTEM_EMAIL],
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          isSystem: true
-        });
-        await convoRef.collection("messages").add({
-          text: "Welcome to Fluid Chat! This is an informational message. You cannot reply to this conversation.",
-          senderUid: SYSTEM_UID,
-          senderName: SYSTEM_DISPLAYNAME,
-          senderPhoto: SYSTEM_PFP,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-      return convoId;
-    }
-
-    // Auth state listener
-    auth.onAuthStateChanged(async user => {
-      if (user) {
-        currentUser = user;
-        const userRef = db.collection("users").doc(currentUser.uid);
-        const userSnap = await userRef.get();
-        document.getElementById('login-container').style.display = "none";
-        if (!userSnap.exists) {
-          document.getElementById('profile-setup-container').style.display = "flex";
-        } else {
-          document.getElementById('chat-container').style.display = "block";
-          loadConversationList();
-          loadIncomingFriendRequests();
-          // Load user settings for toggles
-          const userData = userSnap.data();
-          document.getElementById('toggle-non-friend-messages').checked = userData.allowNonFriendMessages;
+        for (let i = 0; i < 400; i++) {
+            const div = document.createElement('div');
+            div.className = 'flag-item';
+            div.innerHTML = flagSvg;
+            flagContainer.appendChild(div);
         }
-      } else {
-        document.getElementById('login-container').style.display = "flex";
-        document.getElementById('chat-container').style.display = "none";
-        document.getElementById('profile-setup-container').style.display = "none";
-      }
-    });
 
-    // Sign in buttons
-    document.getElementById('google-signin').addEventListener('click', async function() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      try {
-        await auth.signInWithPopup(provider);
-      } catch (error) {
-        console.error("Google sign in error:", error);
-      }
-    });
-    document.getElementById('github-signin').addEventListener('click', async function() {
-      const provider = new firebase.auth.GithubAuthProvider();
-      try {
-        await auth.signInWithPopup(provider);
-      } catch (error) {
-        console.error("GitHub sign in error:", error);
-      }
-    });
+        // Animated Counter
+        let count = 1056429;
+        setInterval(() => {
+            count += Math.floor(Math.random() * 2);
+            document.getElementById('visitor-count').innerText = count.toString().padStart(8, '0');
+        }, 1500);
 
-    // Profile Setup - PFP selection
-    const pfpOptions = document.querySelectorAll(".pfp-option");
-    pfpOptions.forEach(option => {
-      option.addEventListener("click", function() {
-        pfpOptions.forEach(opt => opt.classList.remove("selected"));
-        this.classList.add("selected");
-        selectedPfpURL = this.src;
-      });
-    });
-
-    // Save Profile
-    document.getElementById('profile-save').addEventListener('click', async function() {
-      const fullName = document.getElementById('fullName').value.trim();
-      const displayNameInput = document.getElementById('displayName').value.trim();
-      if (!fullName || !displayNameInput) {
-        alert("Please enter both full name and display name!");
-        return;
-      }
-      if (displayNameInput.length < 3 || displayNameInput.length > 20) {
-        alert("Display name must be between 3 and 20 characters.");
-        return;
-      }
-      if (!isValidCharacters(displayNameInput)) {
-        alert("Display name can only contain letters and numbers (no spaces).");
-        return;
-      }
-      if (await isProfane(displayNameInput)) {
-        alert("Display name contains inappropriate language.");
-        return;
-      }
-      const displayName = displayNameInput.startsWith("@") ? displayNameInput : "@" + displayNameInput;
-      const querySnapshot = await db.collection("users").where("displayName", "==", displayName).get();
-      let alreadyUsed = false;
-      querySnapshot.forEach(doc => {
-        if (doc.id !== currentUser.uid) alreadyUsed = true;
-      });
-      if (alreadyUsed) {
-        alert("Display name already in use.");
-        return;
-      }
-      const photoURL = selectedPfpURL ? selectedPfpURL : DEFAULT_PFP;
-      try {
-        await db.collection("users").doc(currentUser.uid).set({
-          uid: currentUser.uid,
-          email: currentUser.email,
-          fullName: fullName,
-          displayName: displayName,
-          pfpURL: selectedPfpURL || "",
-          photoURL: photoURL,
-          profileCreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          allowNonFriendMessages: true,
-          status: "online",         // default
-          statusMessage: ""         // default
-        });
-        document.getElementById('profile-setup-container').style.display = "none";
-        document.getElementById('chat-container').style.display = "block";
-        const systemConvoId = await createSystemConversationForNewUser();
-        openConversation(systemConvoId, SYSTEM_DISPLAYNAME);
-        loadConversationList();
-      } catch (error) {
-        console.error("Error saving profile:", error);
-      }
-    });
-
-    // Autocomplete search
-    const searchInput = document.getElementById("contact-search");
-    const autocompleteResults = document.getElementById("autocomplete-results");
-    searchInput.addEventListener("input", async function() {
-      const query = searchInput.value.trim();
-      if (!query) {
-        autocompleteResults.style.display = "none";
-        return;
-      }
-      let searchField, searchTerm;
-      if (query.includes("@") && query[0] !== "@") {
-        searchField = "email";
-        searchTerm = query;
-      } else {
-        searchField = "displayName";
-        searchTerm = query.startsWith("@") ? query : "@" + query;
-      }
-      try {
-        const snapshot = await db.collection("users")
-          .orderBy(searchField)
-          .startAt(searchTerm)
-          .endAt(searchTerm + "\uf8ff")
-          .get();
-        autocompleteResults.innerHTML = "";
-        if (snapshot.empty) {
-          autocompleteResults.style.display = "none";
-          return;
-        }
-        snapshot.forEach(doc => {
-          const user = doc.data();
-          if (user.email === SYSTEM_EMAIL || user.uid === currentUser.uid) return;
-          const div = document.createElement("div");
-          div.className = "autocomplete-item";
-          div.textContent = user.displayName + " (" + user.email + ")";
-          div.onclick = () => {
-            searchInput.value = user.email;
-            autocompleteResults.style.display = "none";
-          };
-          autocompleteResults.appendChild(div);
-        });
-        autocompleteResults.style.display = autocompleteResults.childElementCount ? "block" : "none";
-      } catch (error) {
-        console.error("Autocomplete error:", error);
-      }
-    });
-    searchInput.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        document.getElementById("start-chat").click();
-      }
-    });
-
-    // Load conversation list
-    function loadConversationList() {
-      db.collection("conversations")
-        .where("participants", "array-contains", auth.currentUser.uid)
-        .onSnapshot(async snapshot => {
-          const convoListDiv = document.getElementById('conversation-list');
-          convoListDiv.innerHTML = "";
-          for (const doc of snapshot.docs) {
-            const convoData = doc.data();
-            const otherUid = convoData.participants.find(uid => uid !== currentUser.uid);
-            if (!otherUid) continue;
-
-            let otherUser;
-            if (otherUid === SYSTEM_UID) {
-              otherUser = { 
-                displayName: SYSTEM_DISPLAYNAME, 
-                email: SYSTEM_EMAIL, 
-                photoURL: SYSTEM_PFP,
-                status: "online",
-                statusMessage: ""
-              };
-            } else {
-              const userSnap = await db.collection("users").doc(otherUid).get();
-              if (!userSnap.exists) continue;
-              otherUser = userSnap.data();
+        // Logic
+        let meterWidth = 0;
+        function increaseFinnishness() {
+            meterWidth += 25;
+            if (meterWidth > 100) {
+                meterWidth = 0;
+                triggerSaatanan();
             }
-
-            // Create DM item
-            const dmItem = document.createElement('div');
-            dmItem.className = "dm-item";
-
-            // Avatar
-            const avatar = document.createElement('img');
-            avatar.className = "dm-avatar";
-            avatar.src = otherUser.photoURL || DEFAULT_PFP;
-
-            // Status dot
-            const statusDot = document.createElement('span');
-            statusDot.className = "status-dot";
-            statusDot.style.backgroundColor = getStatusColor(otherUser.status);
-
-            // Name & status message
-            const nameSpan = document.createElement('span');
-            nameSpan.className = "dm-displayName";
-            let label = otherUser.displayName || otherUser.email || "Unknown";
-            if (otherUser.statusMessage && otherUser.statusMessage.trim() !== "") {
-              label += ` (${otherUser.statusMessage})`;
-            }
-            nameSpan.textContent = label;
-
-            dmItem.appendChild(avatar);
-            dmItem.appendChild(statusDot);
-            dmItem.appendChild(nameSpan);
-
-            dmItem.onclick = () => {
-              openConversation(doc.id, otherUser.displayName || otherUser.email);
-            };
-            convoListDiv.appendChild(dmItem);
-          }
-        });
-    }
-
-    // Start Chat
-    document.getElementById('start-chat').addEventListener('click', async function() {
-      const query = searchInput.value.trim();
-      if (!query) return;
-      try {
-        const emailQuery = await db.collection("users").where("email", "==", query).get();
-        if (emailQuery.empty) {
-          alert("No user found with that email!");
-          return;
+            document.getElementById('meter-fill').style.width = meterWidth + '%';
         }
-        const recipientDoc = emailQuery.docs[0];
-        const recipientData = recipientDoc.data();
-        if (recipientData.email === SYSTEM_EMAIL) {
-          alert("Cannot start chat with system user.");
-          return;
+
+        function triggerSaatanan() {
+            const popup = document.createElement('div');
+            popup.className = 'fixed inset-0 flex items-center justify-center z-[100] pointer-events-none';
+            popup.innerHTML = `
+                <div class="saatanan-overlay bg-blue-900 text-white p-20 border-[20px] border-white text-9xl font-black italic">
+                    SAATANAN!!!
+                </div>
+            `;
+            document.body.appendChild(popup);
+            
+            // Glitch screen
+            document.body.style.filter = "invert(1) hue-rotate(180deg)";
+            setTimeout(() => {
+                document.body.style.filter = "none";
+                popup.remove();
+            }, 800);
         }
-        if (recipientData.allowNonFriendMessages === false &&
-            (!recipientData.friends || !recipientData.friends.includes(auth.currentUser.uid))) {
-          alert("This user does not accept messages from non-friends.");
-          return;
-        }
-        const participants = [auth.currentUser.uid, recipientData.uid].sort();
-        const convoId = participants.join("_");
-        const convoRef = db.collection("conversations").doc(convoId);
-        const convoSnap = await convoRef.get();
-        if (!convoSnap.exists) {
-          await convoRef.set({
-            participants: participants,
-            participantEmails: [auth.currentUser.email, recipientData.email].sort(),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
-        openConversation(convoId, recipientData.displayName || recipientData.email);
-      } catch (error) {
-        console.error("Error starting chat:", error);
-      }
-    });
-
-    // Open conversation
-    function openConversation(conversationId, contactLabel) {
-      currentConversationId = conversationId;
-      document.getElementById('chat-title').textContent = "Chat with " + contactLabel;
-      db.collection("conversations").doc(conversationId).get().then(doc => {
-        if (doc.exists && doc.data().isSystem) {
-          document.getElementById('message-input').disabled = true;
-          document.getElementById('send-message').disabled = true;
-        } else {
-          document.getElementById('message-input').disabled = false;
-          document.getElementById('send-message').disabled = false;
-        }
-        loadMessages(conversationId);
-      });
-    }
-
-    // Load messages with grouping
-    function loadMessages(conversationId) {
-      const messagesDiv = document.getElementById('messages');
-      messagesDiv.innerHTML = "";
-      db.collection("conversations").doc(conversationId).collection("messages")
-        .orderBy("timestamp")
-        .onSnapshot(snapshot => {
-          messagesDiv.innerHTML = "";
-          const groups = [];
-          let currentGroup = null;
-          const GROUP_TIME_GAP = 10 * 60 * 1000;
-          snapshot.forEach(doc => {
-            const msg = doc.data();
-            msg.id = doc.id;
-            const msgTime = msg.timestamp ? msg.timestamp.toDate() : new Date(0);
-            if (!currentGroup ||
-                currentGroup.senderUid !== msg.senderUid ||
-                (msgTime - currentGroup.lastTimestamp) > GROUP_TIME_GAP) {
-              currentGroup = {
-                senderUid: msg.senderUid,
-                senderPhoto: msg.senderPhoto || DEFAULT_PFP,
-                senderName: msg.senderName || "Unknown",
-                firstTimestamp: msgTime,
-                lastTimestamp: msgTime,
-                messages: [msg]
-              };
-              groups.push(currentGroup);
-            } else {
-              currentGroup.messages.push(msg);
-              currentGroup.lastTimestamp = msgTime;
-            }
-          });
-          groups.forEach(group => {
-            messagesDiv.appendChild(renderMessageGroup(group));
-          });
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        });
-    }
-
-    // Render a group of messages
-    function renderMessageGroup(group) {
-      const container = document.createElement('div');
-      container.className = "message-group";
-      container.style.animation = "fadeIn 0.5s ease forwards";
-
-      const header = document.createElement('div');
-      header.className = "message-header-group";
-      const avatar = document.createElement('img');
-      avatar.className = "message-avatar";
-      avatar.src = group.senderPhoto;
-      avatar.onclick = (e) => { e.stopPropagation(); showProfilePopup(group.senderUid, e); };
-      header.appendChild(avatar);
-      const headerInfo = document.createElement('div');
-      headerInfo.className = "message-header-info";
-      const usernameSpan = document.createElement('span');
-      usernameSpan.className = "message-username";
-      usernameSpan.textContent = group.senderName;
-      headerInfo.appendChild(usernameSpan);
-      const timeSpan = document.createElement('span');
-      timeSpan.className = "message-timestamp";
-      timeSpan.textContent = formatTimestamp({ toDate: () => group.firstTimestamp });
-      headerInfo.appendChild(timeSpan);
-      header.appendChild(headerInfo);
-      container.appendChild(header);
-
-      group.messages.forEach(msg => {
-        const bodyDiv = document.createElement('div');
-        bodyDiv.className = "message-body";
-        bodyDiv.textContent = msg.text;
-        container.appendChild(bodyDiv);
-      });
-      return container;
-    }
-
-function formatTimestamp(ts) {
-  if (!ts) return "";
-  
-  const date = ts.toDate();
-  const now = new Date();
-  
-  // Calculate the difference in milliseconds
-  let diffMs = now - date;
-  
-  // If the difference is negative, clamp it to 0
-  if (diffMs < 0) {
-    diffMs = 0;
-  }
-  
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-
-  if (diffDays === 0) {
-    return `Today at ${timeString}`;
-  } else if (diffDays === 1) {
-    return `Yesterday at ${timeString}`;
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago at ${timeString}`;
-  } else {
-    return date.toLocaleDateString() + ` at ${timeString}`;
-  }
-}
-
-    // Send message
-    document.getElementById('message-input').addEventListener('keydown', e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-    document.getElementById('send-message').addEventListener('click', sendMessage);
-    async function sendMessage() {
-      if (document.getElementById('message-input').disabled) return;
-      const text = document.getElementById('message-input').value.trim();
-      if (!text || !currentConversationId) return;
-      const convoRef = db.collection("conversations").doc(currentConversationId);
-      const convoDoc = await convoRef.get();
-      if (convoDoc.exists && convoDoc.data().isSystem) {
-        alert("Error: Cannot send a message here.");
-        return;
-      }
-      const convoData = convoDoc.data();
-      const recipientUid = convoData.participants.find(uid => uid !== auth.currentUser.uid);
-      if (recipientUid) {
-        const recipientSnap = await db.collection("users").doc(recipientUid).get();
-        if (recipientSnap.exists) {
-          const recipientData = recipientSnap.data();
-          if (recipientData.allowNonFriendMessages === false &&
-              (!recipientData.friends || !recipientData.friends.includes(auth.currentUser.uid))) {
-            alert("You cannot message this user as they do not accept messages from non-friends.");
-            return;
-          }
-        }
-      }
-      const userSnap = await db.collection("users").doc(auth.currentUser.uid).get();
-      const userData = userSnap.data() || {};
-      convoRef.collection("messages")
-        .add({
-          text: text,
-          senderUid: auth.currentUser.uid,
-          senderName: userData.displayName || userData.email || auth.currentUser.email,
-          senderPhoto: userData.photoURL || DEFAULT_PFP,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
-          document.getElementById('message-input').value = "";
-        })
-        .catch(error => console.error("Error sending message:", error));
-    }
-
-    // Profile popup
-    async function showProfilePopup(uid, event) {
-      try {
-        const userSnap = await db.collection("users").doc(uid).get();
-        if (!userSnap.exists) return;
-        const userData = userSnap.data();
-        const popup = document.getElementById("profile-popup");
-        popup.innerHTML = "";
-        const img = document.createElement("img");
-        img.src = userData.photoURL || DEFAULT_PFP;
-        popup.appendChild(img);
-        const h3 = document.createElement("h3");
-        h3.textContent = userData.displayName || userData.email;
-        popup.appendChild(h3);
-        const p = document.createElement("p");
-        p.textContent = userData.profileCreatedAt
-          ? "Joined: " + userData.profileCreatedAt.toDate().toLocaleDateString()
-          : "No join date";
-        popup.appendChild(p);
-        popup.style.left = (event.pageX + 10) + "px";
-        popup.style.top = (event.pageY - 20) + "px";
-        popup.style.display = "block";
-      } catch (error) {
-        console.error("Error showing profile popup:", error);
-      }
-    }
-    document.addEventListener("click", e => {
-      const popup = document.getElementById("profile-popup");
-      if (!e.target.classList.contains("message-avatar") && !popup.contains(e.target)) {
-        popup.style.display = "none";
-      }
-    });
-
-    /* SETTINGS OVERLAY */
-    document.getElementById('open-settings').addEventListener('click', async () => {
-      const userSnap = await db.collection("users").doc(currentUser.uid).get();
-      if (userSnap.exists) {
-        const userData = userSnap.data();
-        // Display name & pfp
-        document.getElementById('settings-displayName').value = userData.displayName.replace("@", "");
-        document.getElementById('settings-pfpURL').value = userData.photoURL || "";
-        // Status & statusMessage
-        document.getElementById('settings-statusSelect').value = userData.status || "offline";
-        document.getElementById('settings-statusMessage').value = userData.statusMessage || "";
-        // Non-friend messages
-        document.getElementById('toggle-non-friend-messages').checked = userData.allowNonFriendMessages;
-      }
-      document.getElementById('settings-overlay').style.display = "flex";
-    });
-    document.getElementById('close-settings').addEventListener('click', () => {
-      document.getElementById('settings-overlay').style.display = "none";
-    });
-    document.getElementById('save-settings').addEventListener('click', async () => {
-      const newDNInput = document.getElementById('settings-displayName').value.trim();
-      const newPfp = document.getElementById('settings-pfpURL').value.trim();
-      const allowNonFriendMessages = document.getElementById('toggle-non-friend-messages').checked;
-      const newStatus = document.getElementById('settings-statusSelect').value;
-      const newStatusMsg = document.getElementById('settings-statusMessage').value.trim();
-
-      // Validate display name
-      if (!newDNInput) {
-        alert("Display name cannot be empty");
-        return;
-      }
-      if (newDNInput.length < 3 || newDNInput.length > 20) {
-        alert("Display name must be 3-20 characters.");
-        return;
-      }
-      if (!isValidCharacters(newDNInput)) {
-        alert("Display name can only contain letters and numbers.");
-        return;
-      }
-      if (await isProfane(newDNInput)) {
-        alert("Display name contains inappropriate language.");
-        return;
-      }
-      const finalDN = newDNInput.startsWith("@") ? newDNInput : "@" + newDNInput;
-
-      // Check if new display name is used by someone else
-      const querySnapshot = await db.collection("users").where("displayName", "==", finalDN).get();
-      let exists = false;
-      querySnapshot.forEach(doc => {
-        if (doc.id !== auth.currentUser.uid) exists = true;
-      });
-      if (exists) {
-        alert("Display name already in use. Please choose another.");
-        return;
-      }
-
-      const finalPfp = newPfp || DEFAULT_PFP;
-
-      try {
-        await db.collection("users").doc(auth.currentUser.uid).update({
-          displayName: finalDN,
-          photoURL: finalPfp,
-          allowNonFriendMessages: allowNonFriendMessages,
-          status: newStatus,
-          statusMessage: newStatusMsg
-        });
-        alert("Settings updated!");
-      } catch (error) {
-        console.error("Error updating settings:", error);
-      }
-    });
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      try {
-        await auth.signOut();
-        alert("Logged out.");
-      } catch (error) {
-        console.error("Error signing out:", error);
-      }
-    });
-
-    /* FRIEND REQUESTS OVERLAY */
-    document.getElementById('open-friend-requests').addEventListener('click', () => {
-      document.getElementById('friend-requests-overlay').style.display = "flex";
-      document.getElementById("friend-requests-content").style.display = "block";
-      document.getElementById("friends-list-content").style.display = "none";
-      document.getElementById("tab-requests").classList.add("active");
-      document.getElementById("tab-friends").classList.remove("active");
-      loadIncomingFriendRequests();
-    });
-    document.getElementById('close-friend-requests').addEventListener('click', () => {
-      document.getElementById('friend-requests-overlay').style.display = "none";
-    });
-    document.getElementById("tab-requests").addEventListener("click", () => {
-      document.getElementById("friend-requests-content").style.display = "block";
-      document.getElementById("friends-list-content").style.display = "none";
-      document.getElementById("tab-requests").classList.add("active");
-      document.getElementById("tab-friends").classList.remove("active");
-      loadIncomingFriendRequests();
-    });
-    document.getElementById("tab-friends").addEventListener("click", () => {
-      document.getElementById("friend-requests-content").style.display = "none";
-      document.getElementById("friends-list-content").style.display = "block";
-      document.getElementById("tab-requests").classList.remove("active");
-      document.getElementById("tab-friends").classList.add("active");
-      loadFriendsList();
-    });
-
-    function loadFriendsList() {
-      const friendsListDiv = document.getElementById("friends-list");
-      friendsListDiv.innerHTML = "";
-      db.collection("users").doc(currentUser.uid).get().then(userSnap => {
-        if (!userSnap.exists) return;
-        const userData = userSnap.data();
-        const friends = userData.friends || [];
-        if (friends.length === 0) {
-          friendsListDiv.innerHTML = "<p>No friends added.</p>";
-          return;
-        }
-        friends.forEach(friendUid => {
-          db.collection("users").doc(friendUid).get().then(friendSnap => {
-            if (friendSnap.exists) {
-              const friend = friendSnap.data();
-              const friendDiv = document.createElement("div");
-              friendDiv.className = "friend-item";
-              friendDiv.innerHTML = `
-                <img src="${friend.photoURL || DEFAULT_PFP}" alt="Avatar"> 
-                <span>${friend.displayName || friend.email}</span> 
-                <button>Remove</button>`;
-              friendDiv.querySelector("button").addEventListener("click", () => {
-                removeFriend(friendUid);
-              });
-              friendsListDiv.appendChild(friendDiv);
-            }
-          });
-        });
-      });
-    }
-
-    async function removeFriend(friendUid) {
-      if (!confirm("Remove this friend?")) return;
-      await db.collection("users").doc(currentUser.uid).update({
-        friends: firebase.firestore.FieldValue.arrayRemove(friendUid)
-      });
-      await db.collection("users").doc(friendUid).update({
-        friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-      });
-      alert("Friend removed.");
-      loadFriendsList();
-      loadConversationList();
-    }
-
-    /* Emoji Picker Logic */
-    const emojiBtn = document.getElementById("emoji-btn");
-    const emojiPicker = document.getElementById("emoji-picker");
-    const messageInput = document.getElementById("message-input");
-
-    emojiBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      emojiPicker.style.display = (emojiPicker.style.display === "flex") ? "none" : "flex";
-    });
-
-    emojiPicker.addEventListener("click", (e) => {
-      if (e.target.tagName === "SPAN") {
-        messageInput.value += e.target.textContent;
-      }
-    });
-
-    // Hide emoji picker when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!emojiPicker.contains(e.target) && e.target.id !== "emoji-btn") {
-        emojiPicker.style.display = "none";
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
