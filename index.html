@@ -25,6 +25,33 @@
             background-attachment: fixed;
             color: #ffffff;
             overflow-x: hidden;
+            transition: filter 0.3s ease;
+        }
+
+        /* The Trippy Effect */
+        .trip-active {
+            animation: shake 0.1s infinite !important;
+            filter: contrast(200%) brightness(150%) saturate(200%);
+        }
+
+        .trip-active body, .trip-active main, .trip-active .glass-card {
+            animation: rgb-strobe 0.2s infinite !important;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            20% { transform: translate(-4px, -1px) rotate(1deg); }
+            40% { transform: translate(4px, 3px) rotate(-1deg); }
+            60% { transform: translate(-2px, 2px) rotate(1deg); }
+            80% { transform: translate(-4px, -2px) rotate(0deg); }
+            100% { transform: translate(2px, -3px) rotate(-1deg); }
+        }
+
+        @keyframes rgb-strobe {
+            0% { background-color: #ff000033; }
+            33% { background-color: #00ff0033; }
+            66% { background-color: #0000ff33; }
+            100% { background-color: #ff000033; }
         }
 
         .glass-card {
@@ -128,6 +155,7 @@
             text-transform: uppercase;
             border: 1px solid var(--accent-cyan);
             width: 100%;
+            transition: all 0.3s ease;
         }
 
         /* Modal Styles */
@@ -248,8 +276,8 @@
             background: #111;
             position: relative;
             border: 2px solid var(--accent-cyan);
-            overflow: hidden;
             border-radius: 8px;
+            overflow: hidden;
         }
         
         .map-path {
@@ -274,7 +302,6 @@
 
         @keyframes travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
 
-        /* Sim Simulator */
         .phone-mockup {
             width: 240px;
             height: 480px;
@@ -334,11 +361,9 @@
         </div>
     </div>
 
-    <div class="w-full max-w-5xl glass-card rounded-xl overflow-hidden shadow-2xl">
+    <div id="main-artifact" class="w-full max-w-5xl glass-card rounded-xl overflow-hidden shadow-2xl">
         <!-- Header -->
         <header class="pt-10 pb-8 md:pt-16 md:pb-12 px-4 md:px-6 text-center bg-gradient-to-b from-white/5 to-transparent relative">
-            
-            <!-- Tracking Access Button -->
             <button onclick="openTracking()" id="track-nav-btn" class="absolute top-4 left-4 opacity-30 hover:opacity-100 transition-opacity flex flex-col items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -378,6 +403,15 @@
                 <section class="space-y-4">
                     <h2 class="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold">Strategic Procurement</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- NEW SNOW BUTTON -->
+                        <div class="p-5 bg-white/5 border border-white/10 rounded-lg flex flex-col justify-between hover:bg-white/10 transition-colors">
+                            <div>
+                                <h3 class="text-lg font-bold text-white tracking-tighter uppercase">Lapland very real Snow</h3>
+                                <p class="text-[10px] text-white/50 mb-4 italic uppercase">Fresh / Non-Yellow / 100% Pure</p>
+                            </div>
+                            <button id="snow-btn" onclick="openCheckout('PURE very real SNOW')" class="buy-btn bg-white !text-black border-none">Buy Snow (5 mk)</button>
+                        </div>
+
                         <div class="p-5 bg-white/5 border border-white/10 rounded-lg flex flex-col justify-between hover:bg-white/10 transition-colors">
                             <div>
                                 <h3 class="text-lg font-bold text-[#00d4ff] tracking-tighter uppercase">Prepaid SIM Card</h3>
@@ -385,13 +419,7 @@
                             </div>
                             <button onclick="openCheckout('PREPAID SIM')" class="buy-btn">Acquire (89 mk) + TRACKING</button>
                         </div>
-                        <div class="p-5 bg-white/5 border border-white/10 rounded-lg flex flex-col justify-between hover:bg-white/10 transition-colors">
-                            <div>
-                                <h3 class="text-lg font-bold text-[#00d4ff] tracking-tighter uppercase">My Summer Car</h3>
-                                <p class="text-[10px] text-white/50 mb-4 italic uppercase">Survival & Maintenance Kit</p>
-                            </div>
-                            <button onclick="openCheckout('MY SUMMER CAR')" class="buy-btn">License (89 mk)</button>
-                        </div>
+                        
                         <div class="p-5 bg-white/5 border border-white/10 rounded-lg flex flex-col justify-between hover:bg-white/10 transition-colors md:col-span-2 border-dashed border-cyan-500/50">
                             <div>
                                 <h3 class="text-lg font-bold text-white tracking-tighter uppercase">Private Party Island</h3>
@@ -407,7 +435,6 @@
                         <h3 class="text-[9px] uppercase tracking-widest text-white/40 mb-4">Traffic Authority</h3>
                         <div class="visitor-lcd text-lg md:text-2xl" id="visitor-count">00000000</div>
                     </div>
-                    
                     <div class="p-6 bg-white/5 rounded-lg border border-white/10">
                         <h3 class="text-[9px] uppercase tracking-widest text-white/40 mb-4">Identity Saturation</h3>
                         <div class="meter-track mb-4">
@@ -505,7 +532,7 @@
             <p class="text-[10px] uppercase text-cyan-400 mb-4">Helsinki -> <span id="target-city">?</span></p>
             <div class="map-container mb-6">
                 <svg width="100%" height="100%" viewBox="0 0 400 300" class="absolute inset-0">
-                    <path class="map-path" d="M 40 260 L 150 150 L 300 50" fill="none" stroke-width="3" />
+                    <path class="map-path" d="M 40 260 L 150 150 L 300 50" fill="none" stroke="#00d4ff" stroke-width="3" />
                     <text x="30" y="280" fill="white" font-size="10">HELSINKI</text>
                     <text x="280" y="40" fill="white" font-size="10" id="map-target-text">DESTINATION</text>
                 </svg>
@@ -520,7 +547,6 @@
     <div id="install-modal">
         <div class="checkout-container rounded-xl text-center">
             <h2 class="text-xl font-black uppercase mb-6">SIM Hardware Deployment</h2>
-            
             <div class="phone-mockup mb-6">
                 <div class="sim-tray" id="phone-tray"></div>
                 <div class="tool-pin" id="sim-tool" onclick="openTray()"></div>
@@ -531,7 +557,6 @@
                     </div>
                 </div>
             </div>
-
             <p id="install-hint" class="text-[10px] text-cyan-400 uppercase font-bold mb-4">1. Use pin to open tray</p>
             <button onclick="closeInstall()" class="action-btn w-full opacity-50" id="install-close-btn" disabled>Finalize Setup</button>
         </div>
@@ -543,24 +568,26 @@
 
         // Audio Synthesis for Shutter Sound
         const playShutterSound = () => {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
-            const output = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < noiseBuffer.length; i++) {
-                output[i] = Math.random() * 2 - 1;
-            }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = noiseBuffer;
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-            noise.start();
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < noiseBuffer.length; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start();
+            } catch(e) {}
         };
 
         // Flag Generation
@@ -656,6 +683,8 @@
 
                 if (currentItem === 'PRIVATE ISLAND') {
                     triggerIslandPurchase();
+                } else if (currentItem === 'PURE very real SNOW') {
+                    handleSnowPurchase();
                 } else {
                     if (currentItem === 'PREPAID SIM') {
                         hasOrderedSim = true;
@@ -673,6 +702,34 @@
             }
         }
 
+        // Snow Logic
+        function handleSnowPurchase() {
+            const btn = document.getElementById('snow-btn');
+            btn.innerText = "SNIFF very real SNOW";
+            btn.className = "buy-btn bg-pink-500 !text-white animate-pulse border-none";
+            btn.onclick = () => eatSnow();
+            triggerPurchase("PURE SNOW ALLOCATED");
+        }
+
+        function eatSnow() {
+            const root = document.documentElement;
+            root.classList.add('trip-active');
+            
+            const message = document.createElement('div');
+            message.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-white p-10 font-black text-5xl z-[999] italic uppercase border-8 border-white';
+            message.innerText = "KYLMÄÄ JA HYVÄÄ!";
+            document.body.appendChild(message);
+
+            setTimeout(() => {
+                root.classList.remove('trip-active');
+                message.remove();
+                const btn = document.getElementById('snow-btn');
+                btn.innerText = "BUY MORE SNOW (5 mk)";
+                btn.className = "buy-btn bg-white !text-black border-none";
+                btn.onclick = () => openCheckout('PURE SNOW');
+            }, 5000);
+        }
+
         function triggerIslandPurchase() {
             const flash = document.getElementById('camera-flash');
             flash.style.opacity = '1';
@@ -686,7 +743,7 @@
         function triggerPurchase(item) {
             const message = document.createElement('div');
             message.className = 'fixed bottom-4 left-4 right-4 md:top-4 md:right-4 md:left-auto bg-white text-black font-black p-4 rounded shadow-2xl z-[500] border-2 border-blue-600 uppercase text-xs animate-bounce';
-            message.innerText = `SUCCESS: ${item} ALLOCATED.`;
+            message.innerText = `SUCCESS: ${item}`;
             document.body.appendChild(message);
             setTimeout(() => message.remove(), 4000);
         }
@@ -700,7 +757,6 @@
             document.getElementById('map-target-text').innerText = cityName;
             document.getElementById('tracking-modal').style.display = 'flex';
             
-            // Re-trigger animation
             const mover = document.getElementById('package-mover');
             mover.style.animation = 'none';
             mover.offsetHeight; 
@@ -719,7 +775,6 @@
             document.getElementById('tracking-modal').style.display = 'none';
         }
 
-        // Sim Installer
         function openInstall() {
             document.getElementById('install-modal').style.display = 'flex';
         }
@@ -736,7 +791,6 @@
             document.getElementById('sim-tool').style.opacity = "0.2";
         }
 
-        // Drag and Drop Simulator
         const sim = document.getElementById('sim-card');
         sim.addEventListener('mousedown', startDrag);
         sim.addEventListener('touchstart', startDrag);
@@ -750,7 +804,6 @@
                 sim.style.left = clientX + 'px';
                 sim.style.top = clientY + 'px';
                 
-                // Detection logic
                 const trayRect = document.getElementById('phone-tray').getBoundingClientRect();
                 if (clientX > trayRect.left && clientX < trayRect.right && clientY > trayRect.top && clientY < trayRect.bottom) {
                     finishInstall();
