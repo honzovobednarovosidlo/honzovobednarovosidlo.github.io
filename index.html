@@ -131,12 +131,12 @@
         }
 
         /* Modal Styles */
-        #checkout-modal {
+        #checkout-modal, #tracking-modal, #install-modal {
             display: none;
             position: fixed;
             inset: 0;
             z-index: 200;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(15px);
             align-items: center;
             justify-content: center;
@@ -205,7 +205,6 @@
             100% { transform: scale(1.1) translate(5px, -5px); }
         }
 
-        /* Island Flash Effect */
         #camera-flash {
             position: fixed;
             inset: 0;
@@ -241,6 +240,85 @@
             0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
             100% { transform: scale(1) rotate(0); opacity: 1; }
         }
+
+        /* Tracking & Simulator Styles */
+        .map-container {
+            width: 100%;
+            height: 300px;
+            background: #111;
+            position: relative;
+            border: 2px solid var(--accent-cyan);
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .map-path {
+            stroke: var(--accent-cyan);
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 3s forwards linear;
+        }
+        
+        @keyframes drawPath { to { stroke-dashoffset: 0; } }
+
+        .package-icon {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 2px solid var(--suomi-blue);
+            border-radius: 3px;
+            offset-path: path("M 40 260 L 150 150 L 300 50");
+            animation: travel 3s forwards linear;
+        }
+
+        @keyframes travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+
+        /* Sim Simulator */
+        .phone-mockup {
+            width: 240px;
+            height: 480px;
+            background: #222;
+            border: 8px solid #444;
+            border-radius: 30px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .sim-tray {
+            position: absolute;
+            right: -10px;
+            top: 100px;
+            width: 20px;
+            height: 40px;
+            background: #555;
+            border-radius: 0 4px 4px 0;
+            transition: transform 0.3s;
+        }
+
+        .sim-tray.open { transform: translateX(25px); }
+
+        .sim-card-obj {
+            width: 12px;
+            height: 18px;
+            background: #00d4ff;
+            border-radius: 2px;
+            cursor: pointer;
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tool-pin {
+            width: 2px;
+            height: 30px;
+            background: silver;
+            position: absolute;
+            right: -40px;
+            top: 105px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-2 md:p-10 flex flex-col items-center">
@@ -248,7 +326,7 @@
     <div id="camera-flash"></div>
 
     <div id="island-celebration" onclick="this.style.display='none'">
-        <div class="cool-container">
+        <div class="cool-container text-black">
             <img src="https://d3i6fh83elv35t.cloudfront.net/static/2025/07/GettyImages-681946576-1024x716.jpg" alt="Your Island" class="w-full h-auto mb-4 border-2 border-black">
             <h2 class="text-4xl md:text-6xl font-black text-blue-900 uppercase leading-none italic mb-2">YOU ARE COOL!</h2>
             <h3 class="text-2xl md:text-4xl font-black text-cyan-600 uppercase italic">OLET SIISTI!</h3>
@@ -258,10 +336,18 @@
 
     <div class="w-full max-w-5xl glass-card rounded-xl overflow-hidden shadow-2xl">
         <!-- Header -->
-        <header class="pt-10 pb-8 md:pt-16 md:pb-12 px-4 md:px-6 text-center bg-gradient-to-b from-white/5 to-transparent">
-            <h1 class="text-4xl md:text-8xl hero-title uppercase mb-2 md:mb-4">
-                Perkelevittu
-            </h1>
+        <header class="pt-10 pb-8 md:pt-16 md:pb-12 px-4 md:px-6 text-center bg-gradient-to-b from-white/5 to-transparent relative">
+            
+            <!-- Tracking Access Button -->
+            <button onclick="openTracking()" id="track-nav-btn" class="absolute top-4 left-4 opacity-30 hover:opacity-100 transition-opacity flex flex-col items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-[8px] uppercase tracking-tighter">Tracking</span>
+            </button>
+
+            <h1 class="text-4xl md:text-8xl hero-title uppercase mb-2 md:mb-4">Perkelevittu</h1>
             <div class="inline-block px-3 py-1 border border-white/20 rounded-full text-[8px] md:text-[10px] tracking-[0.2em] md:tracking-[0.4em] text-white/60 uppercase">
                 Turku Digital Core • Est. 2026
             </div>
@@ -279,7 +365,6 @@
 
         <!-- Main Content -->
         <main class="p-4 md:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
-            
             <div class="lg:col-span-7 space-y-8 md:space-y-10">
                 <section>
                     <h2 class="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-4 font-bold">Protocol Statement</h2>
@@ -298,7 +383,7 @@
                                 <h3 class="text-lg font-bold text-[#00d4ff] tracking-tighter uppercase">Prepaid SIM Card</h3>
                                 <p class="text-[10px] text-white/50 mb-4 italic uppercase">Unrestricted Turku Data</p>
                             </div>
-                            <button onclick="openCheckout('PREPAID SIM')" class="buy-btn">Acquire (89 mk)</button>
+                            <button onclick="openCheckout('PREPAID SIM')" class="buy-btn">Acquire (89 mk) + TRACKING</button>
                         </div>
                         <div class="p-5 bg-white/5 border border-white/10 rounded-lg flex flex-col justify-between hover:bg-white/10 transition-colors">
                             <div>
@@ -307,7 +392,6 @@
                             </div>
                             <button onclick="openCheckout('MY SUMMER CAR')" class="buy-btn">License (89 mk)</button>
                         </div>
-                        <!-- New Private Island Option -->
                         <div class="p-5 bg-white/5 border border-white/10 rounded-lg flex flex-col justify-between hover:bg-white/10 transition-colors md:col-span-2 border-dashed border-cyan-500/50">
                             <div>
                                 <h3 class="text-lg font-bold text-white tracking-tighter uppercase">Private Party Island</h3>
@@ -342,7 +426,7 @@
                     </h2>
                     <ul class="space-y-4 text-[11px] md:text-xs font-bold uppercase tracking-widest">
                         <li class="flex items-center"><span class="text-blue-500 mr-3 italic">01</span> Sauna Excellence</li>
-                        <li class="flex items-center"><sčpan class="text-blue-500 mr-3 italic">02</span> Salmiakki Rations</li>
+                        <li class="flex items-center"><span class="text-blue-500 mr-3 italic">02</span> Salmiakki Rations</li>
                         <li class="flex items-center"><span class="text-blue-500 mr-3 italic">03</span> Acoustic Brutality</li>
                         <li class="flex items-center"><span class="text-blue-500 mr-3 italic">04</span> Unbreakable Sisu</li>
                     </ul>
@@ -378,7 +462,6 @@
                     <div class="flex justify-between items-center mb-3">
                         <label class="text-[10px] text-white/60 font-bold uppercase tracking-tighter">Payment Card</label>
                         <div id="card-brand" class="flex gap-2 h-6 grayscale opacity-30 transition-all duration-300">
-                            <!-- SVG/IMG Logos -->
                             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoIQGUHwTH9Dx5Y5y26she7fL9bnIluXALjA&s" class="h-full object-contain" id="visa-logo" alt="Visa">
                             <svg viewBox="0 0 24 15" class="h-full" id="mc-logo"><circle cx="7" cy="7.5" r="7" fill="#eb001b"/><circle cx="17" cy="7.5" r="7" fill="#ff5f00" fill-opacity=".8"/></svg>
                         </div>
@@ -415,7 +498,49 @@
         </div>
     </div>
 
+    <!-- Package Tracking Modal -->
+    <div id="tracking-modal">
+        <div class="checkout-container rounded-xl text-center">
+            <h2 class="text-2xl font-black uppercase mb-4">SIM Package Tracker</h2>
+            <p class="text-[10px] uppercase text-cyan-400 mb-4">Helsinki -> <span id="target-city">?</span></p>
+            <div class="map-container mb-6">
+                <svg width="100%" height="100%" viewBox="0 0 400 300" class="absolute inset-0">
+                    <path class="map-path" d="M 40 260 L 150 150 L 300 50" fill="none" stroke-width="3" />
+                    <text x="30" y="280" fill="white" font-size="10">HELSINKI</text>
+                    <text x="280" y="40" fill="white" font-size="10" id="map-target-text">DESTINATION</text>
+                </svg>
+                <div class="package-icon" id="package-mover"></div>
+            </div>
+            <div id="delivery-status" class="text-xs uppercase font-bold text-white mb-4 italic">Shipment in Transit...</div>
+            <button onclick="closeTracking()" class="action-btn w-full">Close Intel</button>
+        </div>
+    </div>
+
+    <!-- Sim Installer Modal -->
+    <div id="install-modal">
+        <div class="checkout-container rounded-xl text-center">
+            <h2 class="text-xl font-black uppercase mb-6">SIM Hardware Deployment</h2>
+            
+            <div class="phone-mockup mb-6">
+                <div class="sim-tray" id="phone-tray"></div>
+                <div class="tool-pin" id="sim-tool" onclick="openTray()"></div>
+                <div class="sim-card-obj" id="sim-card" draggable="true"></div>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div id="phone-screen" class="w-[90%] h-[90%] bg-black/80 rounded-[20px] flex items-center justify-center">
+                        <span class="text-[10px] text-white/20 uppercase tracking-[0.2em]" id="screen-text">No Signal</span>
+                    </div>
+                </div>
+            </div>
+
+            <p id="install-hint" class="text-[10px] text-cyan-400 uppercase font-bold mb-4">1. Use pin to open tray</p>
+            <button onclick="closeInstall()" class="action-btn w-full opacity-50" id="install-close-btn" disabled>Finalize Setup</button>
+        </div>
+    </div>
+
     <script>
+        let hasOrderedSim = false;
+        let shippingAddress = "";
+
         // Audio Synthesis for Shutter Sound
         const playShutterSound = () => {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -459,29 +584,19 @@
             let val = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
             let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
             e.target.value = formatted;
-
             const isVisa = val.startsWith('4');
             const isMC = (val.startsWith('5') || val.startsWith('2'));
-
             visaLogo.style.filter = isVisa ? 'grayscale(0) contrast(1.2)' : 'grayscale(1)';
             visaLogo.style.opacity = isVisa ? '1' : '0.3';
-            
             mcLogo.style.filter = isMC ? 'grayscale(0)' : 'grayscale(1)';
             mcLogo.style.opacity = isMC ? '1' : '0.3';
-
-            if (isVisa || isMC) {
-                cardBrandCont.style.opacity = "1";
-            } else {
-                cardBrandCont.style.opacity = "0.3";
-            }
+            cardBrandCont.style.opacity = (isVisa || isMC) ? "1" : "0.3";
         });
 
-        // Bank Selection Simulation
         function selectBank(bank) {
             const options = document.querySelectorAll('.bank-option');
             options.forEach(opt => opt.style.borderColor = "transparent");
             event.currentTarget.style.borderColor = "#00d4ff";
-            
             const message = document.createElement('div');
             message.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white font-bold p-3 rounded text-[10px] z-[600] uppercase tracking-widest';
             message.innerText = `LINKED TO ${bank} SECURE GATEWAY`;
@@ -489,14 +604,12 @@
             setTimeout(() => message.remove(), 2000);
         }
 
-        // Animated Counter
         let count = 1056429;
         setInterval(() => {
             count += Math.floor(Math.random() * 2);
             document.getElementById('visitor-count').innerText = count.toString().padStart(8, '0');
         }, 1500);
 
-        // Saturation Logic
         let meterWidth = 0;
         function increaseFinnishness() {
             meterWidth += 25;
@@ -533,16 +646,25 @@
         }
 
         function validateAndBuy() {
-            const address = document.getElementById('address-input').value.toLowerCase();
+            const address = document.getElementById('address-input').value;
             const errorLog = document.getElementById('error-log');
+            const cleanAddr = address.toLowerCase();
             
-            if (address.includes('finland') || address.includes('suomi') || address.includes('turku')) {
+            if (cleanAddr.includes('finland') || cleanAddr.includes('suomi') || cleanAddr.includes('turku')) {
                 errorLog.classList.add('hidden');
-                
+                shippingAddress = address;
+
                 if (currentItem === 'PRIVATE ISLAND') {
                     triggerIslandPurchase();
                 } else {
-                    triggerPurchase(currentItem);
+                    if (currentItem === 'PREPAID SIM') {
+                        hasOrderedSim = true;
+                        document.getElementById('track-nav-btn').classList.remove('opacity-30');
+                        triggerPurchase(currentItem);
+                        setTimeout(() => openTracking(), 1500);
+                    } else {
+                        triggerPurchase(currentItem);
+                    }
                 }
                 closeCheckout();
             } else {
@@ -552,11 +674,9 @@
         }
 
         function triggerIslandPurchase() {
-            // Flash Effect
             const flash = document.getElementById('camera-flash');
             flash.style.opacity = '1';
             playShutterSound();
-            
             setTimeout(() => {
                 flash.style.opacity = '0';
                 document.getElementById('island-celebration').style.display = 'flex';
@@ -569,6 +689,95 @@
             message.innerText = `SUCCESS: ${item} ALLOCATED.`;
             document.body.appendChild(message);
             setTimeout(() => message.remove(), 4000);
+        }
+
+        // Tracking & Sim Logic
+        function openTracking() {
+            if (!hasOrderedSim) return;
+            const cityMatch = shippingAddress.match(/^([^,]+)/);
+            const cityName = cityMatch ? cityMatch[1].toUpperCase() : "YOUR CITY";
+            document.getElementById('target-city').innerText = cityName;
+            document.getElementById('map-target-text').innerText = cityName;
+            document.getElementById('tracking-modal').style.display = 'flex';
+            
+            // Re-trigger animation
+            const mover = document.getElementById('package-mover');
+            mover.style.animation = 'none';
+            mover.offsetHeight; 
+            mover.style.animation = null;
+
+            setTimeout(() => {
+                document.getElementById('delivery-status').innerText = "Arrived at Destination!";
+                setTimeout(() => {
+                    closeTracking();
+                    openInstall();
+                }, 1000);
+            }, 3000);
+        }
+
+        function closeTracking() {
+            document.getElementById('tracking-modal').style.display = 'none';
+        }
+
+        // Sim Installer
+        function openInstall() {
+            document.getElementById('install-modal').style.display = 'flex';
+        }
+
+        function closeInstall() {
+            document.getElementById('install-modal').style.display = 'none';
+        }
+
+        let trayOpen = false;
+        function openTray() {
+            trayOpen = true;
+            document.getElementById('phone-tray').classList.add('open');
+            document.getElementById('install-hint').innerText = "2. Drag SIM into tray slot";
+            document.getElementById('sim-tool').style.opacity = "0.2";
+        }
+
+        // Drag and Drop Simulator
+        const sim = document.getElementById('sim-card');
+        sim.addEventListener('mousedown', startDrag);
+        sim.addEventListener('touchstart', startDrag);
+
+        function startDrag(e) {
+            if (!trayOpen) return;
+            const move = (ev) => {
+                const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                sim.style.position = 'fixed';
+                sim.style.left = clientX + 'px';
+                sim.style.top = clientY + 'px';
+                
+                // Detection logic
+                const trayRect = document.getElementById('phone-tray').getBoundingClientRect();
+                if (clientX > trayRect.left && clientX < trayRect.right && clientY > trayRect.top && clientY < trayRect.bottom) {
+                    finishInstall();
+                }
+            };
+            const end = () => {
+                window.removeEventListener('mousemove', move);
+                window.removeEventListener('mouseup', end);
+                window.removeEventListener('touchmove', move);
+                window.removeEventListener('touchend', end);
+            };
+            window.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            window.addEventListener('touchmove', move, {passive: false});
+            window.addEventListener('touchend', end);
+        }
+
+        function finishInstall() {
+            sim.style.display = 'none';
+            document.getElementById('phone-tray').classList.remove('open');
+            document.getElementById('phone-screen').style.background = '#002f6c';
+            document.getElementById('screen-text').innerText = "PERKELEVITTU 5G ACTIVE";
+            document.getElementById('screen-text').classList.add('text-white', 'font-bold');
+            document.getElementById('install-hint').innerText = "HARDWARE SECURED!";
+            document.getElementById('install-close-btn').disabled = false;
+            document.getElementById('install-close-btn').classList.remove('opacity-50');
+            document.getElementById('install-close-btn').classList.add('bg-cyan-400');
         }
     </script>
 </body>
